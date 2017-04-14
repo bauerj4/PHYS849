@@ -1,0 +1,78 @@
+\documentclass[12pt]{article}
+\usepackage[margin=0.7in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{subfig}
+\usepackage[]{algorithm2e}
+\RestyleAlgo{boxruled}
+\usepackage{rotating}
+
+\newcommand{\deriv}[3][]{% \deriv[<order>]{<func>}{<var>}
+  \ensuremath{\frac{\partial^{#1} {#2}}{\partial {#3}^{#1}}}}
+\newcommand{\atconstant}[2]{\ensuremath{\left( #1 \right)_{#2}}}
+\begin{document}
+\title{PHYS 849: Assignment 4}
+\author{Jake Bauer}
+\date{\today}
+\maketitle
+
+\section{Sampling the Distributions}
+We are first asked to devise a method to sample from an exponential distribution. Since the exponential distribution is monotonic, we can sample by inverting the CDF.  We should really consider a truncated exponential since the domain is the positive half-space, but we will consider a large enough range such that the deviation will be negligible.  Our sampling algorithm then considers the exponential CDF,
+\begin{equation}
+F(t) = - e^{-t / \tau} + 1
+\end{equation}
+where  $\tau$ is the decay constant.  The inverse is then,
+\begin{equation}
+t = -\frac{\ln [1 - U(0,1)] }{\tau}
+\end{equation}
+where $U(0,1)$ is a uniform sample between 0 and 1. 
+
+We are then asked to sample a Gaussian distribution of mean 1 and standard deviation 0.1.  To sample the requested normal distribution, we use \textsc{r}'s built-in function which implements Box-Muller.  
+
+\section{The Maximum Likelihood Estimator}
+We construct the unbinned log-likelihood,
+\begin{eqnarray}
+\mathcal{L} &=& \frac{e^{-\mu(\tau) }\mu(\tau)^{n}}{n!} \prod_{i=1}^n f(t_i; \tau)\\
+\ln \mathcal{L} &=& - \mu(\tau) + n \ln \mu(\tau) - \ln n! + \sum_{i=1}^n f(t_i; \tau)\\
+\end{eqnarray}
+where $\mu(\tau)$ is the expected number of counts, $n$ is the observed number of counts, and $f(t; \tau)$ is an evaluation of the PDF at $t$.  We are given that the number of counts is known and fixed, meaning that $n=\mu$ is constant w.r.t. $\tau$.  Then, we maximize the likelihood by,
+\begin{eqnarray}
+\deriv{\ln \mathcal{L}}{\tau} &=& -0 + 0 - 0 + \deriv{}{\tau} \sum_{i = 1}^n \ln f(t_i; \tau)\\
+&=& \sum_{i=1}^n n \ln \left[\frac{1}{\tau}\right] - \sum_{i=1}^n \frac{t_i}{\tau}\\
+&=& 0
+\end{eqnarray}
+Solving gives the familiar,
+\begin{equation}
+\hat{\tau} = \frac{1}{n} \sum_{i=1}^{n} t_i,
+\end{equation}
+or the mean of the observations.  That is to say, it does not matter whether or not the data are binned for an estimate of the decay constant.
+\section{Constructing an Estimator from the Chi-Squared}
+We could also derive an estimator for $\tau$ from the $\chi^2$ statistic,
+\begin{eqnarray}
+\chi^2 &=& \sum_{i = 1}^{n_{b}} \frac{(n_i - \tau^{-1} e^{-t_i/ \tau} n \delta t)^2}{\tau^{-1} e^{-t_i/ \tau} n \delta t}
+\end{eqnarray}
+where $n_b$ is the number of bins, a free parameter, $n_i$ are the observed counts per bin, $t_i$ is the position of the bin center, $n = \sum_i n_i$, and $\delta t$ is the bin spacing.  This quantity is minimized if,
+\begin{equation}
+n_i = \tau^{-1} e^{-t_i/\tau}n \delta t.
+\end{equation}
+This gives us the condition,
+\begin{eqnarray}
+\sum_{i=1}^{n_b} \left[\ln \frac{n_i}{n \delta t} + \ln \tau + \frac{t_i}{\tau} \right]&=& 0\\
+ n \ln \tau + \frac{1}{\tau} \sum_{t_i} &=& 0
+\end{eqnarray}
+%\begin{eqnarray}
+%\chi^2 &=& \sum_{i = 1}^{n_{b}} \frac{(n_i - \tau^{-1} e^{-t_i/ \tau} n \delta t)^2}{\tau^{-1} %e^{-t_i/ \tau} n \delta t}\\
+%&=&\sum_{i = 1}^{n_b} \frac{n_i^2 - 2 n_i \tau^{-1} e^{-t_i/\tau} n \delta t + \tau^{-2} e^{-2 %t_i / \tau} n^2 \delta t^2}{\tau^{-1} e^{-t_i / \tau} n \delta t }\\
+%&=& \sum_{i=1}^{n_b} \frac{\tau n_i^2}{e^{-t_i/\tau} n \delta t} - \sum_{i = 1}^{n_b} \frac{2 %n_i}{n} + \sum_{i = 1}^{n_b} \tau^{-1} e^{-t_i/ \tau} n \delta t\\
+%&=& n - 2 + \sum_{i=1}^{n_b} \frac{\tau n_i^2}{e^{-t_i/\tau} n \delta t} 
+%\end{eqnarray}
+%where $n_b$ is the number of bins, a free parameter, $n_i$ are the observed counts per bin, $t_i$ is the position of the bin center, $n = \sum_i n_i$, and $\delta t$ is the bin spacing. A derivative w.r.t. $\tau$ allows us to minimize the statistic,
+%\begin{eqnarray}
+%\deriv{\chi^2}{\tau} &=& 0 - 0 + \sum_{i=1}^{n_b} \frac{n_i^2}{e^{-t_i/\tau} n \delta t} +
+%\end{eqnarray}
+\end{document}

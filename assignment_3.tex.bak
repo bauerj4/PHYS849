@@ -1,0 +1,99 @@
+\documentclass[12pt]{article}
+\usepackage[margin=0.7in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{subfig}
+\usepackage[]{algorithm2e}
+\RestyleAlgo{boxruled}
+\usepackage{rotating}
+
+\newcommand{\deriv}[3][]{% \deriv[<order>]{<func>}{<var>}
+  \ensuremath{\frac{\partial^{#1} {#2}}{\partial {#3}^{#1}}}}
+\newcommand{\atconstant}[2]{\ensuremath{\left( #1 \right)_{#2}}}
+\begin{document}
+\title{PHYS 849: Assignment 3}
+\author{Jake Bauer}
+\date{\today}
+\maketitle
+
+
+\section*{Problem 1}
+\subsection*{Proof by Convolution}
+Let $X$ and $Y$ be two uniformly distributed variables on the domain $[-1,1]$.  Then their sum, $Z$, is distributed as,
+\begin{eqnarray}
+g(\xi) &=& \int_{-\infty}^\infty f(x) f(\xi - x) \text{d} x\\
+\end{eqnarray}
+This will be a function on the interval $[-2,2]$.  Because of the lag variable, $\xi$, these are functions of different arguments that are zero everywhere but $[-1,1]$.  We know that the sum has a discontinuous derivative (upside-down triangle) and the integral needs to be split into two parts.  Put another way, the integrand, which is the derivative of the function we are looking for, is discontinuous at $\xi = 0$. The leg from $\xi \in [-2,0]$ can be described by,
+\begin{eqnarray}
+g(\xi) &=& \int_{-1}^{\xi + 1} \frac{1}{2} \text{d} x\\
+&=& 1 + \frac{\xi}{2}.
+\end{eqnarray}
+Here the bounds come from the fact that $\xi - x > -1$, or $x < \xi + 1$, for some $\xi \in [-2,0]$. The second part of this integral describing the solution  from $[0,1]$ can be worked out assuming $\xi$ is large (forcing $x$ to be small).  The maximum value for $\xi$ is 2.  Since $\xi - x < 1$, $x > \xi - 1$,
+\begin{eqnarray}
+\int_{\xi - 1}^{1} \frac{1}{2} \text{d} x\\
+&=& 1 - \frac{\xi}{2}
+\end{eqnarray}
+The integral is trivially zero outside $\xi \in [-2,2]$.
+\subsection*{Proof by Characteristic Functions}
+The characteristic function of the sum of two IRVs is the product of their characteristic functions.  We exploited this in class to derive the central limit theorem.  We have,
+\begin{equation}
+\phi_Z(k) = \phi_X \phi_Y.
+\end{equation}
+We recall that the characteristic function for a uniform variable on $[a,b]$ is,
+\begin{equation}
+\phi(k) = \frac{e^{ibk} - e^{iak}}{(b - a) i k},
+\end{equation}
+following from simple integration of $e^{ikx}$. Thus we have on $x \in [-1,1]$,
+\begin{eqnarray}
+\phi_Z(k) &=& \left(\frac{e^{ik} - e^{-ik}}{2 i k}\right)^2\\
+&=& \frac{\sin^2 k}{k^2}\\
+&=& \text{sinc}^2 k
+\end{eqnarray}
+The inverse transform of the $\text{sinc}^2 k$ function is a triangle function found in the last section.  That is, for $x = \xi$,
+\begin{equation}
+g(\xi) = \begin{cases} 1 + \frac{ \xi}{2} & \xi \in [-2,0) \\ 1 - \frac{\xi}{2} & \xi \in [0,2] \\ 0 & \text{else}. \end{cases}
+\end{equation}
+Here we have introduced $\xi$ and $g$ to show consistency with the last section.  
+\section*{Problem 2}
+\subsection*{(a)}
+An arbitrary distribution specifies an expected count in each bin.  Deviation from this value due to finite sampling is described by a Poisson distribution.  
+\subsection*{(b)}
+We are told that the background is flat, so we expect a uniform distribution over some energy range.  That is,
+\begin{equation}
+f(E) = \frac{1}{E_{max} - E_{min}}.
+\end{equation}
+\subsection*{(c)}
+The standard deviation for a Poisson distrubtion is $\sqrt{\mu}$.  Thus, for any bin,
+\begin{eqnarray}\label{eq:prob_sum}
+\mathbb{P}[i > 130] &=& \sum_{i = 130}^{\infty} \frac{e^{\mu} \mu^{i}}{i !}.
+\end{eqnarray}
+This partial sum is difficult to evaluate in closed form due to the large nature of the combinatorics involved. Since a numerical implementation is slightly involved, we just use SciPy's Poisson PMF function which makes the detailed overflow considerations necessary to evaluate the PMF.  We get from evaluating this sum until additional contributions are below double precision,  
+\begin{eqnarray}
+\mathbb{P}[i > 130] &=& 0.0023.
+\end{eqnarray}
+One should evaluate Equation \eqref{eq:prob_sum} as a sum and not subtract the complement (sum from 0 to 130) from one.  While both approaches are conceptually correct, subtracting floating-point numbers with similar mangitudes leads to loss of precission in the sum. We also note our result is close to the 0.0027 we would have gotten making a normal approximation. Similarly, for 5 standard deviations,
+\begin{eqnarray}
+\mathbb{P}[i > 150] &=& 1.884 \times 10^{-6}.
+\end{eqnarray}
+\subsection*{(d)}
+If we assume each bin is independent, then the result is governed by a binomial distribution on the probability that one bin exceeds the threshold.  For three standard deviations,
+\begin{eqnarray}
+P[\text{Any bin exceeds } 3 \sigma] &=& \sum_{i = 1}^{20} \binom{20}{i} (0.0023)^{i} (0.9977)^{20 - i}\\
+&=& 0.0456\\
+&\approx & 20 \times 0.0023
+\end{eqnarray}
+Similarly,
+\begin{eqnarray}
+P[\text{Any bin exceeds } 5 \sigma] &=& \sum_{i = 1}^{20} \binom{20}{i} (1.884 \times 10^{-6})^{i} (1.884 \times 10^{-6})^{20 - i}\\
+&=& 3.768 \times 10^{-5}\\
+&\approx& 20 \times 3.768 \times 10^{-5}
+\end{eqnarray}
+While we numerically evaluate the sums, we note that the approximation that the answers are just the bin count times the probability for each bin holds reasonably well.  This is because the probability of getting two or more false detections from the background is next to impossible, so these events contribute negligably to the probability.
+\subsection*{(e)}
+Finding a bin with 157 counts is statistically siginificant at any reasonable $\alpha$ level.  A close to 6 sigma detection would mean that the probability of detecting it in the background by chance is less than $3.8 \times 10^{-5}$.  That is to say, we would expect to run the experiment close to $10^5$ times before finding this result by chance
+\end{document}
